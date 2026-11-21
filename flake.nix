@@ -70,6 +70,19 @@
       # Nix already uses cryptographic hashes for versioning, so we'll just fix
       # the fake semver for now:
       llamaVersion = "0.0.0";
+
+      # Path flakes have no rev, so this is null for local builds
+      llamaCommit =
+        let
+          shortRev = self.shortRev or null;
+          dirtyShortRev = self.dirtyShortRev or null;
+        in
+        if shortRev != null then
+          shortRev
+        else if dirtyShortRev != null then
+          dirtyShortRev
+        else
+          null;
     in
     flake-parts.lib.mkFlake { inherit inputs; }
 
@@ -104,7 +117,7 @@
         # Cf. https://nixos.org/manual/nix/unstable/command-ref/new-cli/nix3-flake.html?highlight=flake#flake-format
         flake.overlays.default = (
           final: prev: {
-            llamaPackages = final.callPackage .devops/nix/scope.nix { inherit llamaVersion; };
+            llamaPackages = final.callPackage .devops/nix/scope.nix { inherit llamaVersion llamaCommit; };
             inherit (final.llamaPackages) llama-cpp;
           }
         );
@@ -139,12 +152,12 @@
             # access them as `nix build .#llamaPackages.${scriptName}` using
             # the same path you would with an overlay.
             legacyPackages = {
-              llamaPackages = pkgs.callPackage .devops/nix/scope.nix { inherit llamaVersion; };
+              llamaPackages = pkgs.callPackage .devops/nix/scope.nix { inherit llamaVersion llamaCommit; };
               llamaPackagesWindows = pkgs.pkgsCross.mingwW64.callPackage .devops/nix/scope.nix {
-                inherit llamaVersion;
+                inherit llamaVersion llamaCommit;
               };
-              llamaPackagesCuda = pkgsCuda.callPackage .devops/nix/scope.nix { inherit llamaVersion; };
-              llamaPackagesRocm = pkgsRocm.callPackage .devops/nix/scope.nix { inherit llamaVersion; };
+              llamaPackagesCuda = pkgsCuda.callPackage .devops/nix/scope.nix { inherit llamaVersion llamaCommit; };
+              llamaPackagesRocm = pkgsRocm.callPackage .devops/nix/scope.nix { inherit llamaVersion llamaCommit; };
             };
 
             # We don't use the overlay here so as to avoid making too many instances of nixpkgs,

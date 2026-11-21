@@ -3,6 +3,7 @@
   newScope,
   python3,
   llamaVersion ? "0.0.0",
+  llamaCommit ? null,
 }:
 
 let
@@ -15,6 +16,7 @@ in
 
 lib.makeScope newScope (self: {
   inherit llamaVersion;
+  inherit llamaCommit;
   gguf-py = self.callPackage ./package-gguf-py.nix {
     inherit (pythonPackages)
       numpy

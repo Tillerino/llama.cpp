@@ -52,6 +52,8 @@
   syclDeviceArch ? null,
   syclMaxParallelLinkJobs ? null,
   llamaVersion ? "0.0.0", # Arbitrary version, substituted by the flake
+  # Optional build info for --version, since the Nix source has no .git
+  llamaCommit ? null,
 
   # CUDA needs its backend stdenv or libstdc++ mismatches downstream.
   # SYCL needs icpx which is provided by the oneAPI stdenv
@@ -270,6 +272,7 @@ effectiveStdenv.mkDerivation (finalAttrs: {
     (cmakeBool "GGML_STATIC" enableStatic)
     (cmakeBool "GGML_RPC" useRpc)
   ]
+  ++ lib.optional (llamaCommit != null) (cmakeFeature "LLAMA_BUILD_COMMIT" llamaCommit)
   ++ optionals useCuda [
     (
       with cudaPackages.flags;
